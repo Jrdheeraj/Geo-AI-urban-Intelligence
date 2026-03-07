@@ -15,8 +15,6 @@ import { API_BASE_URL } from "@/config/api";
 
 const API_BASE = API_BASE_URL.trim().replace(/\/$/, "");
 const CACHE_TTL_MS = 120000;
-const RETRY_STATUS_CODES = new Set([502, 503, 504]);
-const MAX_RETRIES = 1;
 const responseCache = new Map<string, { expires: number; data: unknown }>();
 const inflight = new Map<string, Promise<unknown>>();
 
@@ -85,31 +83,6 @@ function createAbortError(): Error {
   return error;
 }
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function fetchWithRetry(url: string, signal?: AbortSignal): Promise<Response> {
-  let attempt = 0;
-  while (true) {
-    try {
-      const response = await fetch(url, { signal });
-      if (RETRY_STATUS_CODES.has(response.status) && attempt < MAX_RETRIES) {
-        attempt += 1;
-        await sleep(350 * attempt);
-        continue;
-      }
-      return response;
-    } catch (error) {
-      if (isAbortLikeError(error, signal) || attempt >= MAX_RETRIES) {
-        throw error;
-      }
-      attempt += 1;
-      await sleep(350 * attempt);
-    }
-  }
-}
-
 async function fetchApi<T>(endpoint: string, signal?: AbortSignal): Promise<T> {
   if (!API_BASE) {
     throw new Error("VITE_API_URL is not set. Configure frontend/.env with your backend URL.");
@@ -129,7 +102,7 @@ async function fetchApi<T>(endpoint: string, signal?: AbortSignal): Promise<T> {
 
   let response: Response;
   const requestPromise = (async () => {
-    response = await fetchWithRetry(`${API_BASE}${endpoint}`, signal);
+    response = await fetch(`${API_BASE}${endpoint}`, { signal });
     if (!response.ok) {
       throw response;
     }

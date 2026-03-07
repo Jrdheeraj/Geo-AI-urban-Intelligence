@@ -32,8 +32,6 @@ origins = [
     "https://geo-ai-urban-intelligence.vercel.app",
     "https://geo-ai-urban-intelligence-git-main-dheerajs-projects.vercel.app",
 ]
-# Allow Vercel preview deployments (branch/commit URLs) for this project.
-vercel_origin_regex = r"^https://geo-ai-urban-intelligence(?:-[a-z0-9-]+)?\.vercel\.app$"
 
 # Optional extension for additional preview/custom domains.
 extra_cors = os.getenv("CORS_ORIGINS", "").strip()
@@ -43,7 +41,6 @@ if extra_cors:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=sorted(set(origins)),
-    allow_origin_regex=vercel_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

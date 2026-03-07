@@ -138,11 +138,19 @@ export default function AnalyticsPage() {
     setError("");
     setIsAnalyzing(true);
     try {
-      // Run heavy raster requests sequentially to avoid overloading small backend instances.
-      const analyticsResult = await api.getLULCAnalytics(selectedCity, year, startYear, endYear);
-      const changeResult = await api.getChangeDetection(selectedCity, startYear, endYear);
+      const [analyticsResult, changeResult] = await Promise.all([
+        api.getLULCAnalytics(selectedCity, year, startYear, endYear),
+        api.getChangeDetection(selectedCity, startYear, endYear),
+      ]);
       setAnalytics(analyticsResult);
       setChange(changeResult);
+      // Warm up other modules so Insights/Simulation open faster for the same run command.
+      void Promise.allSettled([
+        api.getRisk(selectedCity, startYear, endYear),
+        api.getHotspots(selectedCity, startYear, endYear),
+        api.getInsights(selectedCity, startYear, endYear),
+        api.getSimulation(selectedCity, startYear, endYear, endYear + 2, "trend"),
+      ]);
       if (typeof window !== "undefined") {
         const payload: AnalyticsSessionState = { city: selectedCity, year, startYear, endYear, analytics: analyticsResult, change: changeResult };
         window.sessionStorage.setItem(ANALYTICS_SESSION_KEY, JSON.stringify(payload));
