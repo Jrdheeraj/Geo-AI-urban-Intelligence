@@ -2,8 +2,16 @@ import logging
 import os
 
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.config import DATA_DIR
+from app.config.cities import (
+    DatasetDirectoryMissingError,
+    city_dataset_file_count,
+    invalidate_city_cache,
+    list_available_city_options,
+)
 from app.routes import lulc, change, confidence, map, ai, meta, analytics
 
 logging.basicConfig(
@@ -14,11 +22,18 @@ logger = logging.getLogger(__name__)
 
 
 def _parse_cors_origins() -> tuple[list[str], bool]:
-    raw = os.getenv("CORS_ORIGINS", "*").strip()
-    if not raw or raw == "*":
-        return ["*"], False
+    default_origins = [
+        "https://geo-ai-urban-intelligence.vercel.app",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
+    raw = os.getenv("CORS_ORIGINS", "").strip()
+    if not raw:
+        return default_origins, True
     origins = [origin.strip() for origin in raw.split(",") if origin.strip()]
-    return origins or ["*"], bool(origins)
+    return origins or default_origins, True
 
 
 cors_origins, cors_allow_credentials = _parse_cors_origins()
@@ -37,6 +52,12 @@ app.add_middleware(
 )
 
 
+@app.exception_handler(DatasetDirectoryMissingError)
+async def dataset_directory_missing_handler(request, exc: DatasetDirectoryMissingError):
+    logger.error("Dataset directory missing while serving %s: %s", request.url.path, exc)
+    return JSONResponse(status_code=500, content={"detail": "Dataset directory missing"})
+
+
 @app.middleware("http")
 async def log_api_errors(request, call_next):
     try:
@@ -48,6 +69,24 @@ async def log_api_errors(request, call_next):
     if response.status_code >= 400:
         logger.warning("API error %s %s -> %s", request.method, request.url.path, response.status_code)
     return response
+
+
+@app.on_event("startup")
+def verify_dataset_integrity() -> None:
+    if not DATA_DIR.exists() or not DATA_DIR.is_dir():
+        logger.error("Dataset directory missing: %s", DATA_DIR)
+        return
+
+    invalidate_city_cache()
+    cities = list_available_city_options()
+    if not cities:
+        logger.warning("No city datasets detected in: %s", DATA_DIR)
+        return
+
+    logger.info("Detected cities: %s", ", ".join(city["name"] for city in cities))
+    for city in cities:
+        city_id = city["id"]
+        logger.info("%s datasets: %d files", city["name"], city_dataset_file_count(city_id))
 
 app.include_router(lulc.router, prefix="/lulc", tags=["LULC"])
 app.include_router(change.router, prefix="/change", tags=["Change"])

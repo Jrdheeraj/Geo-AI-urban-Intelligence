@@ -21,17 +21,36 @@ def _safe_confidence_stats(year: int, city: str):
     data, _ = load_confidence(year, city=city)
     valid = data[data > 0]
     if valid.size == 0:
-        raise HTTPException(status_code=404, detail="No valid confidence pixels found in raster")
+        return {
+            "year": year,
+            "city": city,
+            "min": 0,
+            "max": 0,
+            "mean": 0.0,
+            "median": 0,
+            "valid_pixels": 0,
+            "total_pixels": int(data.size),
+            "coverage_percent": 0.0,
+            "accuracy": 0.0,
+            "kappa": 0.0,
+        }
+
+    mean_conf = float(valid.mean())
+    accuracy = max(0.0, min(1.0, mean_conf / 100.0))
+    # Heuristic normalization for a bounded kappa-like score from confidence.
+    kappa = max(0.0, min(1.0, (accuracy - 0.5) / 0.5))
     return {
         "year": year,
         "city": city,
         "min": int(valid.min()),
         "max": int(valid.max()),
-        "mean": round(float(valid.mean()), 2),
+        "mean": round(mean_conf, 2),
         "median": int(np.median(valid)),
         "valid_pixels": int(valid.size),
         "total_pixels": int(data.size),
         "coverage_percent": round((valid.size / data.size) * 100, 2),
+        "accuracy": round(accuracy, 4),
+        "kappa": round(kappa, 4),
     }
 
 

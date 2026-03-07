@@ -17,11 +17,24 @@ def _cached_lulc_area(city_id: str, year: int):
     return area_stats(lulc)
 
 
+def _compact_lulc_stats(payload: dict) -> dict[str, float]:
+    by_name = {row.get("class_name", "").lower(): float(row.get("percentage", 0.0)) for row in payload.get("stats", [])}
+    return {
+        "urban": round(by_name.get("built-up", 0.0), 2),
+        "vegetation": round(by_name.get("forest", 0.0) + by_name.get("agriculture", 0.0), 2),
+        "water": round(by_name.get("water bodies", 0.0), 2),
+        "bareland": round(by_name.get("barren land", 0.0), 2),
+    }
+
+
 @router.get("/{year}")
 def lulc_area(year: int):
     try:
         city_id = resolve_default_city_for_lulc_year(year)
-        payload = _cached_lulc_area(city_id, year)
+        payload = _cached_lulc_area(city_id, year).copy()
+        payload["city"] = city_id
+        payload["year"] = year
+        payload["lulc_stats"] = _compact_lulc_stats(payload)
         logger.info("LULC summary served for year=%s using city=%s", year, city_id)
         return payload
     except FileNotFoundError as e:
@@ -36,7 +49,10 @@ def lulc_area(year: int):
 def lulc_area_by_city(city: str, year: int):
     try:
         city_id = resolve_city_id(city)
-        payload = _cached_lulc_area(city_id, year)
+        payload = _cached_lulc_area(city_id, year).copy()
+        payload["city"] = city_id
+        payload["year"] = year
+        payload["lulc_stats"] = _compact_lulc_stats(payload)
         logger.info("LULC summary served for city=%s year=%s", city_id, year)
         return payload
     except FileNotFoundError as e:
