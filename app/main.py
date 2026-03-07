@@ -77,7 +77,6 @@ def verify_dataset_integrity() -> None:
         logger.error("Dataset directory missing: %s", DATA_DIR)
         return
 
-    logger.info("Dataset directory found: %s", DATA_DIR)
     invalidate_city_cache()
     cities = list_available_city_options()
     if not cities:
@@ -101,11 +100,4 @@ app.include_router(analytics.router, prefix="/analytics", tags=["Analytics"])
 @app.get("/")
 def health():
     logger.info("Health check served")
-    return {"status": "GeoAI backend running"}
-
-
-if __name__ == "__main__":
-    import uvicorn
-
-    port = int(os.environ.get("PORT", 10000))
-    uvicorn.run("app.main:app", host="0.0.0.0", port=port)
+    return {"status": "Backend running successfully"}
