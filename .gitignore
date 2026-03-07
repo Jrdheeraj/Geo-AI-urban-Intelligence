@@ -69,7 +69,6 @@ frontend/.env.*
 # Project data and artifacts
 # ----------------------------
 data/raw/
-data/gee_outputs/
 outputs/
 !outputs/.gitkeep
 
