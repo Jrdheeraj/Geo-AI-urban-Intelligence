@@ -11,9 +11,9 @@ import {
   LULCResponse,
   Scenario,
 } from "@/types/api";
+import { API_BASE_URL } from "@/config/api";
 
-const envBase = import.meta.env.VITE_API_BASE_URL?.trim().replace(/\/$/, "");
-const API_BASE = envBase || "";
+const API_BASE = API_BASE_URL.trim().replace(/\/$/, "");
 const CACHE_TTL_MS = 120000;
 const responseCache = new Map<string, { expires: number; data: unknown }>();
 const inflight = new Map<string, Promise<unknown>>();
@@ -46,7 +46,7 @@ function createAbortError(): Error {
 
 async function fetchApi<T>(endpoint: string, signal?: AbortSignal): Promise<T> {
   if (!API_BASE) {
-    throw new Error("VITE_API_BASE_URL is not set. Configure frontend/.env with your backend URL.");
+    throw new Error("VITE_API_URL is not set. Configure frontend/.env with your backend URL.");
   }
 
   const cacheKey = `${API_BASE}${endpoint}`;
