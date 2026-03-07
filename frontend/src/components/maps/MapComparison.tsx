@@ -121,9 +121,10 @@ export default function MapComparison({
       >
         <div className="w-1 h-full bg-primary-foreground/80" />
         <div className="absolute top-1/2 -translate-y-1/2 w-10 h-10 bg-card border-2 border-primary rounded-full flex items-center justify-center shadow-lg">
-          <span className="text-primary text-xs font-bold">⟷</span>
+          <span className="text-primary text-xs font-bold">&lt;&gt;</span>
         </div>
       </div>
     </div>
   );
 }
+

@@ -18,13 +18,52 @@ const CACHE_TTL_MS = 120000;
 const responseCache = new Map<string, { expires: number; data: unknown }>();
 const inflight = new Map<string, Promise<unknown>>();
 
-function cityPath(city: unknown): string {
-  if (typeof city !== "string") throw new Error("Invalid city selection.");
-  const normalized = city.trim();
-  if (!normalized || normalized.toLowerCase() === "[object object]") {
+function normalizeCityId(city: string): string {
+  const normalized = city.trim().toLowerCase();
+  if (!normalized || normalized === "[object object]") {
     throw new Error("Invalid city selection.");
   }
-  return encodeURIComponent(normalized);
+  return normalized;
+}
+
+function toCityName(cityId: string): string {
+  return cityId
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(" ")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function parseCityOption(raw: unknown): CityOption | null {
+  if (typeof raw === "string") {
+    const id = normalizeCityId(raw);
+    return { id, name: toCityName(raw.trim()), folder: id };
+  }
+
+  if (!raw || typeof raw !== "object") return null;
+
+  const candidate = raw as Partial<CityOption> & { [key: string]: unknown };
+  const idSource =
+    typeof candidate.id === "string"
+      ? candidate.id
+      : typeof candidate.folder === "string"
+      ? candidate.folder
+      : typeof candidate.name === "string"
+      ? candidate.name
+      : "";
+
+  if (!idSource) return null;
+  const id = normalizeCityId(idSource);
+  const name = typeof candidate.name === "string" && candidate.name.trim() ? candidate.name.trim() : toCityName(id);
+  const folder = typeof candidate.folder === "string" && candidate.folder.trim() ? candidate.folder.trim() : id;
+  return { id, name, folder };
+}
+
+function cityPath(city: unknown): string {
+  if (typeof city !== "string") throw new Error("Invalid city selection.");
+  return encodeURIComponent(normalizeCityId(city));
 }
 
 function isAbortLikeError(error: unknown, signal?: AbortSignal): boolean {
@@ -108,8 +147,19 @@ export function getMapOverlayUrl(path: string): string {
 
 export const api = {
   getCities: async (signal?: AbortSignal): Promise<CityOption[]> => {
-    const response = await fetchApi<{ cities: CityOption[] }>("/meta/cities", signal);
-    return response.cities ?? [];
+    const response = await fetchApi<{ cities?: unknown[] }>("/meta/cities", signal);
+    const cityRows = Array.isArray(response.cities) ? response.cities : [];
+    const seen = new Set<string>();
+    const normalized: CityOption[] = [];
+
+    for (const row of cityRows) {
+      const city = parseCityOption(row);
+      if (!city || seen.has(city.id)) continue;
+      seen.add(city.id);
+      normalized.push(city);
+    }
+
+    return normalized;
   },
 
   getAvailability: (city: string, signal?: AbortSignal): Promise<CityAvailability> =>

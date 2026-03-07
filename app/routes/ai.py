@@ -1,6 +1,8 @@
 from fastapi import APIRouter, HTTPException, Query
 from functools import lru_cache
+import logging
 
+from app.config.cities import resolve_city_id
 from app.services.ai_service import (
     apply_policy_scenario,
     compute_risk_masks,
@@ -14,6 +16,7 @@ from app.services.analytics_service import area_stats
 from app.services.raster_service import load_lulc
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @lru_cache(maxsize=128)
@@ -83,10 +86,13 @@ def urban_planning_simulator(
         raise HTTPException(status_code=400, detail="target_year must be greater than end_year")
 
     try:
-        return _cached_simulation_payload(city, start_year, end_year, target_year, scenario)
+        city_id = resolve_city_id(city)
+        return _cached_simulation_payload(city_id, start_year, end_year, target_year, scenario)
     except FileNotFoundError as e:
+        logger.warning("AI simulation unavailable for city=%s %s-%s target=%s: %s", city, start_year, end_year, target_year, e)
         raise HTTPException(status_code=404, detail=str(e))
     except ValueError as e:
+        logger.warning("Invalid AI simulation request for city=%s %s-%s target=%s: %s", city, start_year, end_year, target_year, e)
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -95,10 +101,13 @@ def urban_risk_alerts(city: str, start_year: int, end_year: int):
     if end_year <= start_year:
         raise HTTPException(status_code=400, detail="end_year must be greater than start_year")
     try:
-        return _cached_risk_payload(city, start_year, end_year)
+        city_id = resolve_city_id(city)
+        return _cached_risk_payload(city_id, start_year, end_year)
     except FileNotFoundError as e:
+        logger.warning("AI risk unavailable for city=%s %s-%s: %s", city, start_year, end_year, e)
         raise HTTPException(status_code=404, detail=str(e))
     except ValueError as e:
+        logger.warning("Invalid AI risk request for city=%s %s-%s: %s", city, start_year, end_year, e)
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -107,10 +116,13 @@ def urban_growth_hotspots(city: str, start_year: int, end_year: int):
     if end_year <= start_year:
         raise HTTPException(status_code=400, detail="end_year must be greater than start_year")
     try:
-        return _cached_hotspot_payload(city, start_year, end_year)
+        city_id = resolve_city_id(city)
+        return _cached_hotspot_payload(city_id, start_year, end_year)
     except FileNotFoundError as e:
+        logger.warning("AI hotspots unavailable for city=%s %s-%s: %s", city, start_year, end_year, e)
         raise HTTPException(status_code=404, detail=str(e))
     except ValueError as e:
+        logger.warning("Invalid AI hotspots request for city=%s %s-%s: %s", city, start_year, end_year, e)
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -119,8 +131,11 @@ def ai_insights(city: str, start_year: int, end_year: int):
     if end_year <= start_year:
         raise HTTPException(status_code=400, detail="end_year must be greater than start_year")
     try:
-        return _cached_insights_payload(city, start_year, end_year)
+        city_id = resolve_city_id(city)
+        return _cached_insights_payload(city_id, start_year, end_year)
     except FileNotFoundError as e:
+        logger.warning("AI insights unavailable for city=%s %s-%s: %s", city, start_year, end_year, e)
         raise HTTPException(status_code=404, detail=str(e))
     except ValueError as e:
+        logger.warning("Invalid AI insights request for city=%s %s-%s: %s", city, start_year, end_year, e)
         raise HTTPException(status_code=400, detail=str(e))

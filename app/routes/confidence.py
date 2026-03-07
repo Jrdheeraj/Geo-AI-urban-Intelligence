@@ -1,10 +1,20 @@
 import numpy as np
+import logging
 from fastapi import APIRouter, HTTPException
 
 from app.constants import LULC_CLASSES
-from app.services.raster_service import load_confidence, load_lulc, load_change
+from app.config.cities import resolve_city_id
+from app.services.raster_service import (
+    load_change,
+    load_confidence,
+    load_lulc,
+    resolve_default_city_for_change_and_confidence,
+    resolve_default_city_for_confidence_year,
+    resolve_default_city_for_lulc_and_confidence_year,
+)
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 def _safe_confidence_stats(year: int, city: str):
@@ -67,32 +77,42 @@ def _confidence_by_change(start_year: int, end_year: int, city: str):
 
 @router.get("/{year}")
 def confidence_summary(year: int):
-    # Backward-compatible default city endpoint
     try:
-        return _safe_confidence_stats(year, city="tirupati")
+        city_id = resolve_default_city_for_confidence_year(year)
+        logger.info("Confidence summary served for year=%s using city=%s", year, city_id)
+        return _safe_confidence_stats(year, city=city_id)
     except FileNotFoundError as e:
+        logger.warning("Confidence summary unavailable for year=%s: %s", year, e)
         raise HTTPException(status_code=404, detail=str(e))
     except ValueError as e:
+        logger.warning("Invalid confidence summary request for year=%s: %s", year, e)
         raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("/lulc/{year}")
 def confidence_by_lulc(year: int):
     try:
-        return _confidence_by_lulc(year, city="tirupati")
+        city_id = resolve_default_city_for_lulc_and_confidence_year(year)
+        logger.info("Confidence-by-LULC served for year=%s using city=%s", year, city_id)
+        return _confidence_by_lulc(year, city=city_id)
     except FileNotFoundError as e:
+        logger.warning("Confidence-by-LULC unavailable for year=%s: %s", year, e)
         raise HTTPException(status_code=404, detail=str(e))
     except ValueError as e:
+        logger.warning("Invalid confidence-by-LULC request for year=%s: %s", year, e)
         raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("/lulc/{city}/{year}")
 def confidence_by_lulc_city(city: str, year: int):
     try:
-        return _confidence_by_lulc(year, city=city)
+        city_id = resolve_city_id(city)
+        return _confidence_by_lulc(year, city=city_id)
     except FileNotFoundError as e:
+        logger.warning("Confidence-by-LULC unavailable for city=%s year=%s: %s", city, year, e)
         raise HTTPException(status_code=404, detail=str(e))
     except ValueError as e:
+        logger.warning("Invalid confidence-by-LULC request for city=%s year=%s: %s", city, year, e)
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -101,10 +121,14 @@ def confidence_by_change(start_year: int, end_year: int):
     if end_year <= start_year:
         raise HTTPException(status_code=400, detail="end_year must be greater than start_year")
     try:
-        return _confidence_by_change(start_year, end_year, city="tirupati")
+        city_id = resolve_default_city_for_change_and_confidence(start_year, end_year)
+        logger.info("Confidence-by-change served for %s-%s using city=%s", start_year, end_year, city_id)
+        return _confidence_by_change(start_year, end_year, city=city_id)
     except FileNotFoundError as e:
+        logger.warning("Confidence-by-change unavailable for %s-%s: %s", start_year, end_year, e)
         raise HTTPException(status_code=404, detail=str(e))
     except ValueError as e:
+        logger.warning("Invalid confidence-by-change request for %s-%s: %s", start_year, end_year, e)
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -113,18 +137,24 @@ def confidence_by_change_city(city: str, start_year: int, end_year: int):
     if end_year <= start_year:
         raise HTTPException(status_code=400, detail="end_year must be greater than start_year")
     try:
-        return _confidence_by_change(start_year, end_year, city=city)
+        city_id = resolve_city_id(city)
+        return _confidence_by_change(start_year, end_year, city=city_id)
     except FileNotFoundError as e:
+        logger.warning("Confidence-by-change unavailable for city=%s %s-%s: %s", city, start_year, end_year, e)
         raise HTTPException(status_code=404, detail=str(e))
     except ValueError as e:
+        logger.warning("Invalid confidence-by-change request for city=%s %s-%s: %s", city, start_year, end_year, e)
         raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("/{city}/{year}")
 def confidence_summary_by_city(city: str, year: int):
     try:
-        return _safe_confidence_stats(year, city=city)
+        city_id = resolve_city_id(city)
+        return _safe_confidence_stats(year, city=city_id)
     except FileNotFoundError as e:
+        logger.warning("Confidence summary unavailable for city=%s year=%s: %s", city, year, e)
         raise HTTPException(status_code=404, detail=str(e))
     except ValueError as e:
+        logger.warning("Invalid confidence summary request for city=%s year=%s: %s", city, year, e)
         raise HTTPException(status_code=400, detail=str(e))
