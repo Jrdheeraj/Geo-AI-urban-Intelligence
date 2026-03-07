@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import re
 from functools import lru_cache
 from pathlib import Path
@@ -8,6 +9,7 @@ from typing import Iterable
 
 import numpy as np
 import rasterio
+from rasterio.enums import Resampling
 
 from app.config import DATA_DIR
 from app.config.cities import (
@@ -18,6 +20,9 @@ from app.config.cities import (
 )
 
 logger = logging.getLogger(__name__)
+
+# Keep raster reads bounded for memory-constrained deployments (e.g., Render).
+MAX_RASTER_PIXELS = int(os.getenv("GEOAI_MAX_RASTER_PIXELS", "12000000"))
 
 _DATASET_DIR_NAMES = ("lulc", "change", "confidence", "ndvi")
 _KIND_TOKENS = {
@@ -33,6 +38,27 @@ def load_raster(path: Path):
     resolved = path.resolve()
     logger.info("Loading raster: %s", resolved)
     with rasterio.open(resolved) as src:
+        total_pixels = int(src.width) * int(src.height)
+        if MAX_RASTER_PIXELS > 0 and total_pixels > MAX_RASTER_PIXELS:
+            scale = (MAX_RASTER_PIXELS / float(total_pixels)) ** 0.5
+            out_height = max(1, int(src.height * scale))
+            out_width = max(1, int(src.width * scale))
+            logger.info(
+                "Downsampling raster %s from %sx%s to %sx%s (max_pixels=%s)",
+                resolved.name,
+                src.width,
+                src.height,
+                out_width,
+                out_height,
+                MAX_RASTER_PIXELS,
+            )
+            data = src.read(
+                1,
+                out_shape=(out_height, out_width),
+                resampling=Resampling.nearest,
+            )
+            return data, src.nodata
+
         return src.read(1), src.nodata
 
 

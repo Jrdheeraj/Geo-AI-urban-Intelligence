@@ -53,7 +53,14 @@ def _normalize_lulc_classes(lulc_array: np.ndarray):
 
 
 def _class_pixel_counts(normalized: np.ndarray) -> list[int]:
-    return [int((normalized == idx).sum()) for idx in range(len(CLASS_NAMES))]
+    data = np.asarray(normalized, dtype=np.int16).ravel()
+    if data.size == 0:
+        return [0] * len(CLASS_NAMES)
+    valid = data[(data >= 0) & (data < len(CLASS_NAMES))]
+    if valid.size == 0:
+        return [0] * len(CLASS_NAMES)
+    counts = np.bincount(valid, minlength=len(CLASS_NAMES))
+    return counts.astype(int).tolist()
 
 
 def _log_class_validation(context: str, total_pixels: int, unique_classes: list[int], schema: str, class_counts: list[int]):
@@ -119,34 +126,34 @@ def change_stats(old_lulc, new_lulc, pixel_size=10):
     old_normalized, old_valid, old_unique, old_schema = _normalize_lulc_classes(old_lulc)
     new_normalized, new_valid, new_unique, new_schema = _normalize_lulc_classes(new_lulc)
     valid_mask = old_valid & new_valid
+    old_values = old_normalized[valid_mask].astype(np.int16, copy=False)
+    new_values = new_normalized[valid_mask].astype(np.int16, copy=False)
 
-    old_counts = _class_pixel_counts(old_normalized[valid_mask])
-    new_counts = _class_pixel_counts(new_normalized[valid_mask])
+    old_counts = _class_pixel_counts(old_values)
+    new_counts = _class_pixel_counts(new_values)
     _log_class_validation("Transition Matrix (from-year)", int(valid_mask.sum()), old_unique, old_schema, old_counts)
     _log_class_validation("Transition Matrix (to-year)", int(valid_mask.sum()), new_unique, new_schema, new_counts)
 
     num_classes = len(CLASS_NAMES)
     matrix_counts = np.zeros((num_classes, num_classes), dtype=float)
+    if old_values.size > 0:
+        transition_codes = (old_values.astype(np.int32) * num_classes) + new_values.astype(np.int32)
+        matrix_counts = np.bincount(
+            transition_codes,
+            minlength=num_classes * num_classes,
+        ).reshape((num_classes, num_classes)).astype(float)
 
     breakdown = []
 
-    # Calculate transitions
-    for i, name_i in enumerate(CLASS_NAMES):
-        for j, name_j in enumerate(CLASS_NAMES):
-            # Count pixels transitioning from class i to class j
-            mask = valid_mask & (old_normalized == i) & (new_normalized == j)
-            count = mask.sum()
-            area = count * pixel_area_ha
-
-            # Fill count matrix (row=from, col=to)
-            matrix_counts[i, j] = float(count)
-
-            if count > 0:
-                breakdown.append({
-                    "from_class": name_i,
-                    "to_class": name_j,
-                    "area_ha": round(area, 2)
-                })
+    # Collect only non-zero transitions for compact payloads.
+    for i, j in np.argwhere(matrix_counts > 0):
+        breakdown.append(
+            {
+                "from_class": CLASS_NAMES[int(i)],
+                "to_class": CLASS_NAMES[int(j)],
+                "area_ha": round(float(matrix_counts[int(i), int(j)] * pixel_area_ha), 2),
+            }
+        )
 
     # Normalize matrix to percentages for frontend heatmap if needed, 
     # but usually raw area or row-normalized is better. 
