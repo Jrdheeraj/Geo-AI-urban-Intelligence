@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import Navbar from "./components/Navbar";
 import Index from "./pages/Index";
+import { useKeepBackendAlive } from "./hooks/useKeepBackendAlive";
 
 const MapsPage = lazy(() => import("./pages/MapsPage"));
 const AnalyticsPage = lazy(() => import("./pages/AnalyticsPage"));
@@ -29,8 +30,11 @@ const PageLoader = () => (
   </div>
 );
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
+const App = () => {
+  useKeepBackendAlive();
+
+  return (
+    <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
@@ -50,6 +54,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;
