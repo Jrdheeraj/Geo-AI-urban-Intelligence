@@ -80,7 +80,7 @@ export default function HeroSection() {
           className="flex flex-col sm:flex-row items-center justify-center gap-4"
         >
           <Link
-            to="/maps"
+            to="/analytics"
             className="inline-flex items-center gap-2 bg-cta text-cta-foreground px-7 py-3.5 rounded-full text-base font-semibold hover:opacity-90 transition-opacity"
           >
             Start Analysis
