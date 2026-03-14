@@ -116,12 +116,13 @@ export default function Navbar() {
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </button>
 
-            {/* Mobile/Tablet Drawer Toggle */}
+            {/* Mobile/Tablet Menu Button - Visible only for Mobile/Tablet users */}
             <div className="lg:hidden">
               <Sheet>
                 <SheetTrigger asChild>
-                  <button className="p-2.5 rounded-full hover:bg-white/10 transition-colors border border-white/10">
-                    <Menu className="w-5 h-5" />
+                  <button className="flex items-center gap-2 bg-white/15 backdrop-blur-md px-5 py-2.5 rounded-full border border-white/20 hover:bg-white/25 transition-all shadow-lg active:scale-95">
+                    <Menu className="w-5 h-5 text-foreground" />
+                    <span className="text-sm font-bold text-foreground tracking-wide uppercase">Menu</span>
                   </button>
                 </SheetTrigger>
                 <SheetContent side="right" className="w-[300px] sm:w-[350px] bg-background/95 backdrop-blur-xl border-l border-white/10">
