@@ -120,9 +120,9 @@ export default function Navbar() {
             <div className="lg:hidden">
               <Sheet>
                 <SheetTrigger asChild>
-                  <button className="flex items-center gap-2 bg-white/15 backdrop-blur-md px-5 py-2.5 rounded-full border border-white/20 hover:bg-white/25 transition-all shadow-lg active:scale-95">
-                    <Menu className="w-5 h-5 text-foreground" />
-                    <span className="text-sm font-bold text-foreground tracking-wide uppercase">Menu</span>
+                  <button className="flex items-center gap-2 bg-muted/50 backdrop-blur-md px-5 py-2.5 rounded-full border border-border/50 hover:bg-muted/80 transition-all active:scale-95 shadow-sm group">
+                    <Menu className="w-5 h-5 text-foreground/80 group-hover:text-foreground transition-colors" />
+                    <span className="text-sm font-bold text-foreground/80 group-hover:text-foreground tracking-wide uppercase transition-colors">Menu</span>
                   </button>
                 </SheetTrigger>
                 <SheetContent side="right" className="w-[300px] sm:w-[350px] bg-background/95 backdrop-blur-xl border-l border-white/10">
