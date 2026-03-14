@@ -1,21 +1,46 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Globe, Menu, X } from "lucide-react";
+import { 
+  Globe, 
+  Menu, 
+  X, 
+  Home, 
+  BarChart3, 
+  Map as MapIcon, 
+  Brain, 
+  Zap, 
+  Info,
+  ArrowRight
+} from "lucide-react";
 import { triggerAnalysisFromDraft } from "@/lib/analysisCommand";
+import {
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 
 const navItems = [
-  { label: "Home", href: "/" },
-  { label: "Analytics", href: "/analytics" },
-  { label: "Maps", href: "/maps" },
-  { label: "AI Insights", href: "/insights" },
-  { label: "Simulation", href: "/simulation" },
-  { label: "About", href: "/about" },
+  { label: "Home", href: "/", icon: Home },
+  { label: "Analytics", href: "/analytics", icon: BarChart3 },
+  { label: "Maps", href: "/maps", icon: MapIcon },
+  { label: "AI Insights", href: "/insights", icon: Brain },
+  { label: "Simulation", href: "/simulation", icon: Zap },
+  { label: "About", href: "/about", icon: Info },
 ];
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -32,9 +57,10 @@ export default function Navbar() {
 
   return (
     <div
-      className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-5xl transition-all duration-300 ${
+      className={cn(
+        "fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-6xl transition-all duration-300",
         scrolled ? "top-2" : "top-4"
-      }`}
+      )}
     >
       <motion.header
         initial={{ y: -100 }}
@@ -42,91 +68,105 @@ export default function Navbar() {
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="w-full"
       >
-      <nav className="floating-nav rounded-full px-4 py-2.5 flex items-center justify-between relative">
-        <Link to="/" className="flex items-center gap-2 shrink-0">
-          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-            <Globe className="w-4 h-4 text-primary-foreground" />
+        <nav className="rounded-full px-4 py-2 flex items-center justify-between relative bg-background/70 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.12)] font-['Inter']">
+          {/* Logo Section */}
+          <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
+            <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center transition-all group-hover:scale-110 group-hover:shadow-[0_0_15px_rgba(var(--primary),0.5)]">
+              <Globe className="w-5 h-5 text-primary-foreground" />
+            </div>
+            <span className="font-bold text-[15px] text-foreground hidden sm:block tracking-tight">GeoAI Tirupati</span>
+          </Link>
+
+          {/* Desktop/Tablet Navigation */}
+          <div className="hidden lg:flex items-center absolute left-1/2 -translate-x-1/2">
+            <NavigationMenu>
+              <NavigationMenuList className="gap-1">
+                {navItems.map((item) => {
+                  const active = location.pathname === item.href;
+                  return (
+                    <NavigationMenuItem key={item.href}>
+                      <Link to={item.href}>
+                        <NavigationMenuLink
+                          className={cn(
+                            navigationMenuTriggerStyle(),
+                            "h-10 px-4 rounded-full bg-transparent transition-all duration-300 flex items-center gap-2 group",
+                            active 
+                              ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground shadow-md" 
+                              : "text-muted-foreground hover:bg-white/10 hover:text-foreground"
+                          )}
+                        >
+                          <item.icon className={cn("w-4 h-4", active ? "text-primary-foreground" : "text-muted-foreground group-hover:text-primary")} />
+                          <span className="font-medium">{item.label}</span>
+                        </NavigationMenuLink>
+                      </Link>
+                    </NavigationMenuItem>
+                  );
+                })}
+              </NavigationMenuList>
+            </NavigationMenu>
           </div>
-          <span className="font-bold text-sm text-foreground hidden sm:block">GeoAI Urban Intelligence</span>
-        </Link>
 
-        <div className="hidden md:flex items-center gap-1 bg-muted rounded-full px-1.5 py-1 absolute left-1/2 -translate-x-1/2 whitespace-nowrap">
-          {navItems.map((item) => {
-            const active = location.pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                to={item.href}
-                className={`relative px-3.5 py-1.5 text-sm font-medium rounded-full transition-all duration-200 whitespace-nowrap ${
-                  active
-                    ? "text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {active && (
-                  <motion.div
-                    layoutId="nav-pill"
-                    className="absolute inset-0 bg-primary rounded-full"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
-                  />
-                )}
-                <span className="relative z-10 whitespace-nowrap">{item.label}</span>
-              </Link>
-            );
-          })}
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onStartAnalysis}
-            className="hidden sm:inline-flex items-center gap-2 bg-cta text-cta-foreground px-4 py-2 rounded-full text-sm font-semibold hover:opacity-90 transition-opacity whitespace-nowrap"
-          >
-            Start Analysis
-            <span className="text-xs">-&gt;</span>
-          </button>
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden p-2 rounded-full hover:bg-muted transition-colors"
-          >
-            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
-        </div>
-      </nav>
-
-      <AnimatePresence>
-        {mobileOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="md:hidden mt-2 floating-nav rounded-2xl p-4 space-y-1"
-          >
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                to={item.href}
-                onClick={() => setMobileOpen(false)}
-                className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                  location.pathname === item.href
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
+          {/* Desktop/Tablet CTA + Mobile Menu Button */}
+          <div className="flex items-center gap-3">
             <button
-              onClick={() => {
-                setMobileOpen(false);
-                onStartAnalysis();
-              }}
-              className="block w-full text-center bg-cta text-cta-foreground px-4 py-2.5 rounded-xl text-sm font-semibold mt-2"
+              onClick={onStartAnalysis}
+              className="hidden sm:inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 rounded-full text-sm font-semibold hover:shadow-lg active:scale-95 transition-all group"
             >
-              Start Analysis -&gt;
+              Start Analysis
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+
+            {/* Mobile/Tablet Drawer Toggle */}
+            <div className="lg:hidden">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <button className="p-2.5 rounded-full hover:bg-white/10 transition-colors border border-white/10">
+                    <Menu className="w-5 h-5" />
+                  </button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[300px] sm:w-[350px] bg-background/95 backdrop-blur-xl border-l border-white/10">
+                  <SheetHeader className="text-left mb-8">
+                    <SheetTitle className="flex items-center gap-2">
+                       <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                        <Globe className="w-4 h-4 text-primary-foreground" />
+                      </div>
+                      <span className="font-bold">GeoAI Navigation</span>
+                    </SheetTitle>
+                  </SheetHeader>
+                  <div className="flex flex-col gap-2">
+                    {navItems.map((item) => {
+                      const active = location.pathname === item.href;
+                      return (
+                        <Link
+                          key={item.href}
+                          to={item.href}
+                          className={cn(
+                            "flex items-center gap-3 px-4 py-3.5 rounded-2xl text-[15px] font-medium transition-all",
+                            active
+                              ? "bg-primary text-primary-foreground shadow-lg"
+                              : "text-muted-foreground hover:bg-white/5 hover:text-foreground border border-transparent hover:border-white/10"
+                          )}
+                        >
+                          <item.icon className={cn("w-5 h-5", active ? "text-primary-foreground" : "text-muted-foreground")} />
+                          {item.label}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                  <div className="mt-auto pt-8 border-t border-white/10 mt-8">
+                    <button
+                      onClick={onStartAnalysis}
+                      className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground px-4 py-4 rounded-2xl font-bold shadow-xl active:scale-95 transition-all"
+                    >
+                      Start New Analysis
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+          </div>
+        </nav>
       </motion.header>
     </div>
   );
