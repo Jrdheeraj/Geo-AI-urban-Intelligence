@@ -138,17 +138,8 @@ export default function AnalyticsPage() {
       return;
     }
 
-    // Only broadcast if this was a manual UI trigger (not from an incoming command)
-    // but here we just ensure we have a command object for tracking if needed.
-    triggerAnalysis({
-      city,
-      year: y,
-      startYear: start,
-      endYear: end,
-      targetYear: end + 2,
-      scenario: "trend",
-      runAt: Date.now(),
-    });
+    // We no longer triggerAnalysis here to avoid infinite event feedback loops.
+    // triggerAnalysis is now handled directly by the UI trigger (button click).
 
     setError("");
     setIsAnalyzing(true);
@@ -195,13 +186,11 @@ export default function AnalyticsPage() {
       }
     };
 
-    // Only subscribe to live commands. Do NOT apply existing commands on mount
-    // to ensure a completely clean start as requested.
     return subscribeAnalysisCommand((command) => {
       // On live subscription, we DO run
       applyCommand(command, true);
     });
-  }, [cities, analytics]);
+  }, [cities]); // Removed analytics to prevent re-subscribing on every result
 
   const lulcByClass = useMemo(() => {
     return {
@@ -348,7 +337,21 @@ export default function AnalyticsPage() {
             </div>
             <div className="flex items-end">
               <button
-                onClick={() => void runAnalysis()}
+                onClick={() => {
+                  if (canRun) {
+                    // Manual trigger: broadcast to other components/tabs
+                    triggerAnalysis({
+                      city: selectedCity,
+                      year: year!,
+                      startYear: startYear!,
+                      endYear: endYear!,
+                      targetYear: endYear! + 2,
+                      scenario: "trend",
+                      runAt: Date.now(),
+                    });
+                    void runAnalysis();
+                  }
+                }}
                 disabled={!canRun || isAnalyzing}
                 className="w-full flex items-center justify-center gap-1 bg-cta text-cta-foreground px-3 py-2 rounded-lg text-sm font-semibold disabled:opacity-50"
               >
