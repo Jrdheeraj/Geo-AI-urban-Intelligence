@@ -9,6 +9,7 @@ ENV PYTHONUNBUFFERED 1
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libgdal-dev \
+    gdal-bin \
     libproj-dev \
     python3-dev \
     && rm -rf /var/lib/apt/lists/*
