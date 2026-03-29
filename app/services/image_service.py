@@ -17,8 +17,23 @@ LULC_COLOR_MAP = {
     5: (115, 115, 115)
 }
 
+def _downsample_if_large(data: np.ndarray, max_dim: int = 2048) -> np.ndarray:
+    """Resize raster to a manageable size to prevent OOM on 512MB RAM tier."""
+    h, w = data.shape
+    if h <= max_dim and w <= max_dim:
+        return data
+    
+    scale = max_dim / max(h, w)
+    new_h, new_w = int(h * scale), int(w * scale)
+    
+    # Use PIL for efficient downsampling of categorical data (nearest neighbor)
+    img = Image.fromarray(data)
+    img = img.resize((new_w, new_h), Image.NEAREST)
+    return np.array(img)
+
 def create_lulc_image(data):
     """Convert LULC numpy array to color-coded RGBA PNG bytes."""
+    data = _downsample_if_large(data)
     h, w = data.shape
     rgba = np.zeros((h, w, 4), dtype=np.uint8)
     
@@ -37,6 +52,7 @@ def create_lulc_image(data):
 
 def create_change_image(data):
     """Convert Change numpy array to red-themed RGBA PNG bytes."""
+    data = _downsample_if_large(data)
     h, w = data.shape
     rgba = np.zeros((h, w, 4), dtype=np.uint8)
     
@@ -59,6 +75,7 @@ def create_confidence_image(data):
     Data is expected to be 0-1 or class-id-like. 
     We'll assume 0 is nodata, and 1-5 or 0-100 values.
     """
+    data = _downsample_if_large(data)
     h, w = data.shape
     rgba = np.zeros((h, w, 4), dtype=np.uint8)
     
@@ -98,6 +115,7 @@ def create_confidence_image(data):
 
 def create_hotspot_image(density):
     """Render urban growth hotspot density to RGBA PNG bytes."""
+    density = _downsample_if_large(density)
     h, w = density.shape
     rgba = np.zeros((h, w, 4), dtype=np.uint8)
 
@@ -117,6 +135,8 @@ def create_hotspot_image(density):
 
 def create_risk_image(high_risk_mask, medium_risk_mask):
     """Render risk mask to RGBA PNG bytes."""
+    high_risk_mask = _downsample_if_large(high_risk_mask)
+    medium_risk_mask = _downsample_if_large(medium_risk_mask)
     h, w = high_risk_mask.shape
     rgba = np.zeros((h, w, 4), dtype=np.uint8)
 
