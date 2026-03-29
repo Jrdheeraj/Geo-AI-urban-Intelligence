@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowRight, Map } from "lucide-react";
+import { triggerAnalysisFromDraft } from "@/lib/analysisCommand";
 
 export default function HeroSection() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -79,20 +80,33 @@ export default function HeroSection() {
           transition={{ duration: 0.8, delay: 0.6 }}
           className="flex flex-col sm:flex-row items-center justify-center gap-4"
         >
-          <Link
-            to="/analytics"
+          <a
+            href="#analytics"
+            onClick={(e) => {
+              e.preventDefault();
+              triggerAnalysisFromDraft();
+              const el = document.getElementById("analytics");
+              if (el) window.scrollTo({ top: el.offsetTop - 80, behavior: "smooth" });
+              window.history.pushState(null, "", "#analytics");
+            }}
             className="inline-flex items-center gap-2 bg-cta text-cta-foreground px-7 py-3.5 rounded-full text-base font-semibold hover:opacity-90 transition-opacity"
           >
             Start Analysis
             <ArrowRight className="w-4 h-4" />
-          </Link>
-          <Link
-            to="/maps"
+          </a>
+          <a
+            href="#maps"
+            onClick={(e) => {
+              e.preventDefault();
+              const el = document.getElementById("maps");
+              if (el) window.scrollTo({ top: el.offsetTop - 80, behavior: "smooth" });
+              window.history.pushState(null, "", "#maps");
+            }}
             className="inline-flex items-center gap-2 bg-card/80 backdrop-blur-sm border border-border text-foreground px-7 py-3.5 rounded-full text-base font-semibold hover:bg-card transition-colors"
           >
             <Map className="w-4 h-4" />
             Explore Maps
-          </Link>
+          </a>
         </motion.div>
       </div>
     </section>

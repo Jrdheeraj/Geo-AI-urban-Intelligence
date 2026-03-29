@@ -5,7 +5,7 @@ import { api } from "@/services/api";
 import { resolveInitialCity, saveCity } from "@/lib/cityPreference";
 import { getAnalysisCommand, saveAnalysisDraft, subscribeAnalysisCommand } from "@/lib/analysisCommand";
 import { CityAvailability, CityOption, Scenario } from "@/types/api";
-import Footer from "@/components/Footer";
+
 
 const MapComparison = lazy(() => import("@/components/maps/MapComparison"));
 
@@ -136,7 +136,7 @@ export default function MapsPage() {
   };
 
   return (
-    <main className="pt-24 pb-0 min-h-screen">
+    <section id="maps" className="py-24 border-t border-border">
       <div className="max-w-7xl mx-auto px-4">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           <h1 className="text-3xl font-bold text-foreground mb-2">Map Visualization</h1>
@@ -312,7 +312,6 @@ export default function MapsPage() {
           </div>
         </motion.div>
       </div>
-      <Footer />
-    </main>
+    </section>
   );
 }

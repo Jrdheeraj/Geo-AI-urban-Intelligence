@@ -98,11 +98,11 @@ Install and run:
 
 ```bash
 pip install -r requirements.txt
-uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
+uvicorn app.main:app --host 0.0.0.0 --port 8888 --reload
 ```
 
-Backend URL: `http://localhost:8001`
-Swagger docs: `http://localhost:8001/docs`
+Backend URL: `http://localhost:8888`
+Swagger docs: `http://localhost:8888/docs`
 
 ### 2) Frontend
 
@@ -146,7 +146,7 @@ venv\Scripts\python.exe -m compileall app
 
 ## API Overview
 
-Base URL: `http://localhost:8001`
+Base URL: `http://localhost:8888`
 
 - Health: `GET /`
 - Meta:
@@ -176,7 +176,7 @@ Base URL: `http://localhost:8001`
 ## Troubleshooting
 
 - `VITE_API_BASE_URL is not set`:
-  - Add `frontend/.env` with `VITE_API_BASE_URL=http://localhost:8001`
+  - Add `frontend/.env` with `VITE_API_BASE_URL=http://localhost:8888`
 - 404 for city/year/pair:
   - Check files under `data/gee_outputs/<city>/...`
   - Ensure filenames contain expected year tokens

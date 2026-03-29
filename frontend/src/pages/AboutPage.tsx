@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Globe, Code, Database, Satellite } from "lucide-react";
-import Footer from "@/components/Footer";
+
 
 const techStack = [
   { icon: Code, label: "React + TypeScript", desc: "Modern frontend framework" },
@@ -11,7 +11,7 @@ const techStack = [
 
 export default function AboutPage() {
   return (
-    <main className="pt-24 pb-0 min-h-screen">
+    <section id="about" className="py-24 border-t border-border">
       <div className="max-w-4xl mx-auto px-4">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-16">
           <h1 className="text-4xl font-bold text-foreground mb-4">About GeoAI Platform</h1>
@@ -51,7 +51,6 @@ export default function AboutPage() {
           </div>
         </motion.div>
       </div>
-      <Footer />
-    </main>
+    </section>
   );
 }

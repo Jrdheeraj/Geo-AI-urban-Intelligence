@@ -3,16 +3,11 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import Navbar from "./components/Navbar";
 import Index from "./pages/Index";
 import { useKeepBackendAlive } from "./hooks/useKeepBackendAlive";
 
-const MapsPage = lazy(() => import("./pages/MapsPage"));
-const AnalyticsPage = lazy(() => import("./pages/AnalyticsPage"));
-const InsightsPage = lazy(() => import("./pages/InsightsPage"));
-const SimulationPage = lazy(() => import("./pages/SimulationPage"));
-const AboutPage = lazy(() => import("./pages/AboutPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -30,30 +25,58 @@ const PageLoader = () => (
   </div>
 );
 
+import { useLocation } from "react-router-dom";
+
+const ScrollToHash = () => {
+  const { hash } = useLocation();
+
+  useEffect(() => {
+    if (hash) {
+      const id = hash.replace("#", "");
+      const element = document.getElementById(id);
+      if (element) {
+        const offset = 80;
+        const bodyRect = document.body.getBoundingClientRect().top;
+        const elementRect = element.getBoundingClientRect().top;
+        const elementPosition = elementRect - bodyRect;
+        const offsetPosition = elementPosition - offset;
+
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: "smooth"
+        });
+      }
+    }
+  }, [hash]);
+
+  return null;
+};
+
 const App = () => {
   useKeepBackendAlive();
 
   return (
     <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Navbar />
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/maps" element={<MapsPage />} />
-            <Route path="/analytics" element={<AnalyticsPage />} />
-            <Route path="/insights" element={<InsightsPage />} />
-            <Route path="/simulation" element={<SimulationPage />} />
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Navbar />
+          <ScrollToHash />
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/maps" element={<Index />} />
+              <Route path="/analytics" element={<Index />} />
+              <Route path="/insights" element={<Index />} />
+              <Route path="/simulation" element={<Index />} />
+              <Route path="/about" element={<Index />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 };
 

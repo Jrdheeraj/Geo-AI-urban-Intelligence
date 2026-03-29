@@ -108,3 +108,14 @@ export const LULC_COLORS: Record<string, string> = {
   "Barren Land": "#a3a3a3",
   "Built-up": "#ef4444",
 };
+export interface ReportData {
+  city: string;
+  cityName: string;
+  year: number;
+  startYear: number;
+  endYear: number;
+  analytics: LULCAnalyticsResponse;
+  change: ChangeResponse;
+  risk?: AIRiskResponse;
+  insights?: AIInsightsResponse;
+}

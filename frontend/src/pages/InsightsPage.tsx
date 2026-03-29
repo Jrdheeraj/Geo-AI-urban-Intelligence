@@ -5,7 +5,7 @@ import { api } from "@/services/api";
 import { resolveInitialCity, saveCity } from "@/lib/cityPreference";
 import { getAnalysisCommand, saveAnalysisDraft, subscribeAnalysisCommand } from "@/lib/analysisCommand";
 import { AIHotspotResponse, AIInsightsResponse, AIRiskResponse, CityAvailability, CityOption } from "@/types/api";
-import Footer from "@/components/Footer";
+
 
 export default function InsightsPage() {
   const [cities, setCities] = useState<CityOption[]>([]);
@@ -143,11 +143,12 @@ export default function InsightsPage() {
 
   useEffect(() => {
     saveAnalysisDraft({
-      city: isValidSelectedCity ? selectedCity : undefined,
+      city: selectedCity || undefined,
       startYear: startYear || undefined,
       endYear: endYear || undefined,
+      targetYear: endYear ? endYear + 2 : undefined,
     });
-  }, [isValidSelectedCity, selectedCity, startYear, endYear]);
+  }, [selectedCity, startYear, endYear]);
 
   const onPairChange = (value: string) => {
     if (!value) {
@@ -191,7 +192,7 @@ export default function InsightsPage() {
   const hotspotTotal = hotspotData.reduce((sum, item) => sum + item.value, 0);
 
   return (
-    <main className="pt-24 pb-0 min-h-screen">
+    <section id="insights" className="py-24 border-t border-border">
       <div className="max-w-6xl mx-auto px-4">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">AI Insights & Risk Assessment</h1>
@@ -296,7 +297,6 @@ export default function InsightsPage() {
           </div>
         </motion.div>
       </div>
-      <Footer />
-    </main>
+    </section>
   );
 }

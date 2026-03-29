@@ -5,7 +5,7 @@ import { api } from "@/services/api";
 import { resolveInitialCity, saveCity } from "@/lib/cityPreference";
 import { getAnalysisCommand, saveAnalysisDraft, subscribeAnalysisCommand } from "@/lib/analysisCommand";
 import { AISimulatorResponse, CityAvailability, CityOption, LULC_COLORS, Scenario } from "@/types/api";
-import Footer from "@/components/Footer";
+
 
 const scenarioOptions: Array<{ id: Scenario; label: string; icon: typeof TrendingUp; desc: string }> = [
   { id: "trend", label: "Trend-based", icon: TrendingUp, desc: "Continue current growth patterns" },
@@ -122,19 +122,28 @@ export default function SimulationPage() {
     }) => {
       if (!cities.some((c) => c.id === command.city)) return;
       if (!command.city || !command.startYear || !command.endYear || !command.targetYear) return;
+      
+      const isNew = selectedCity !== command.city || 
+                    startYear !== command.startYear || 
+                    endYear !== command.endYear || 
+                    targetYear !== command.targetYear || 
+                    scenario !== command.scenario;
+
       setSelectedCity(command.city);
       setStartYear(command.startYear);
       setEndYear(command.endYear);
       setTargetYear(command.targetYear);
       setScenario(command.scenario);
+      
+      // Auto-run if triggered by command
       void runSimulation(command.city, command.startYear, command.endYear, command.targetYear, command.scenario);
     };
 
     const existing = getAnalysisCommand();
-    if (existing) applyCommand(existing);
+    if (existing && !result) applyCommand(existing);
 
     return subscribeAnalysisCommand((command) => applyCommand(command));
-  }, [cities, runSimulation]);
+  }, [cities, runSimulation, result, selectedCity, startYear, endYear, targetYear, scenario]);
 
   const projected = useMemo(() => {
     const map: Record<string, number> = {};
@@ -145,7 +154,7 @@ export default function SimulationPage() {
   const canRunSimulation = Boolean(selectedCity && startYear && endYear && targetYear && targetYear > endYear && endYear > startYear);
 
   return (
-    <main className="pt-24 pb-0 min-h-screen">
+    <section id="simulation" className="py-24 border-t border-border">
       <div className="max-w-6xl mx-auto px-4">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">Urban Growth Simulation</h1>
@@ -240,7 +249,6 @@ export default function SimulationPage() {
           </motion.div>
         )}
       </div>
-      <Footer />
-    </main>
+    </section>
   );
 }

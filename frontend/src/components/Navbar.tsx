@@ -31,12 +31,12 @@ import {
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { label: "Home", href: "/", icon: Home },
-  { label: "Analytics", href: "/analytics", icon: BarChart3 },
-  { label: "Maps", href: "/maps", icon: MapIcon },
-  { label: "AI Insights", href: "/insights", icon: Brain },
-  { label: "Simulation", href: "/simulation", icon: Zap },
-  { label: "About", href: "/about", icon: Info },
+  { label: "Home", href: "#", icon: Home, id: "top" },
+  { label: "Maps", href: "#maps", icon: MapIcon, id: "maps" },
+  { label: "Analytics", href: "#analytics", icon: BarChart3, id: "analytics" },
+  { label: "AI Insights", href: "#insights", icon: Brain, id: "insights" },
+  { label: "Simulation", href: "#simulation", icon: Zap, id: "simulation" },
+  { label: "About", href: "#about", icon: Info, id: "about" },
 ];
 
 export default function Navbar() {
@@ -50,9 +50,38 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const [open, setOpen] = useState(false);
+
+  const scrollToSection = (id: string) => {
+    setOpen(false); // Close mobile menu if open
+    if (id === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      navigate("/");
+      return;
+    }
+    const element = document.getElementById(id);
+    if (element) {
+      const offset = 80; // Navbar height offset
+      const bodyRect = document.body.getBoundingClientRect().top;
+      const elementRect = element.getBoundingClientRect().top;
+      const elementPosition = elementRect - bodyRect;
+      const offsetPosition = elementPosition - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth"
+      });
+      // Optionally update URL without reload
+      window.history.pushState(null, "", `#${id}`);
+    } else {
+      // If not on home page, navigate to home with hash
+      navigate(`/#${id}`);
+    }
+  };
+
   const onStartAnalysis = () => {
     triggerAnalysisFromDraft();
-    if (location.pathname !== "/analytics") navigate("/analytics");
+    scrollToSection("analytics");
   };
 
   return (
@@ -70,7 +99,7 @@ export default function Navbar() {
       >
         <nav className="rounded-full px-4 py-2 flex items-center justify-between relative bg-background/70 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.12)] font-['Inter']">
           {/* Logo Section */}
-          <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
+          <Link to="/" onClick={(e) => { e.preventDefault(); scrollToSection("top"); }} className="flex items-center gap-2.5 shrink-0 group">
             <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center transition-all group-hover:scale-110 group-hover:shadow-[0_0_15px_rgba(var(--primary),0.5)]">
               <Globe className="w-5 h-5 text-primary-foreground" />
             </div>
@@ -82,10 +111,16 @@ export default function Navbar() {
             <NavigationMenu>
               <NavigationMenuList className="gap-1">
                 {navItems.map((item) => {
-                  const active = location.pathname === item.href;
+                  const active = location.hash === item.href || (location.hash === "" && item.id === "top");
                   return (
-                    <NavigationMenuItem key={item.href}>
-                      <Link to={item.href}>
+                    <NavigationMenuItem key={item.id}>
+                      <a
+                        href={item.href}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          scrollToSection(item.id);
+                        }}
+                      >
                         <NavigationMenuLink
                           className={cn(
                             navigationMenuTriggerStyle(),
@@ -98,7 +133,7 @@ export default function Navbar() {
                           <item.icon className={cn("w-4 h-4", active ? "text-primary-foreground" : "text-muted-foreground group-hover:text-primary")} />
                           <span className="font-medium">{item.label}</span>
                         </NavigationMenuLink>
-                      </Link>
+                      </a>
                     </NavigationMenuItem>
                   );
                 })}
@@ -118,7 +153,7 @@ export default function Navbar() {
 
             {/* Mobile/Tablet Menu Button - Visible only for Mobile/Tablet users */}
             <div className="lg:hidden">
-              <Sheet>
+              <Sheet open={open} onOpenChange={setOpen}>
                 <SheetTrigger asChild>
                   <button className="flex items-center gap-2 bg-muted/50 backdrop-blur-md px-5 py-2.5 rounded-full border border-border/50 hover:bg-muted/80 transition-all active:scale-95 shadow-sm group">
                     <Menu className="w-5 h-5 text-foreground/80 group-hover:text-foreground transition-colors" />
@@ -136,11 +171,15 @@ export default function Navbar() {
                   </SheetHeader>
                   <div className="flex flex-col gap-2">
                     {navItems.map((item) => {
-                      const active = location.pathname === item.href;
+                      const active = location.hash === item.href || (location.hash === "" && item.id === "top");
                       return (
-                        <Link
-                          key={item.href}
-                          to={item.href}
+                        <a
+                          key={item.id}
+                          href={item.href}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            scrollToSection(item.id);
+                          }}
                           className={cn(
                             "flex items-center gap-3 px-4 py-3.5 rounded-2xl text-[15px] font-medium transition-all",
                             active
@@ -150,7 +189,7 @@ export default function Navbar() {
                         >
                           <item.icon className={cn("w-5 h-5", active ? "text-primary-foreground" : "text-muted-foreground")} />
                           {item.label}
-                        </Link>
+                        </a>
                       );
                     })}
                   </div>
@@ -159,7 +198,7 @@ export default function Navbar() {
                       onClick={onStartAnalysis}
                       className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground px-4 py-4 rounded-2xl font-bold shadow-xl active:scale-95 transition-all"
                     >
-                      Start New Analysis
+                      Start Analysis
                       <ArrowRight className="w-4 h-4" />
                     </button>
                   </div>
