@@ -1,5 +1,7 @@
 # GeoAI Urban Growth Monitoring
 
+[![GeoAI Urban Growth Intelligence Platform](hero_preview.png)](https://geo-ai-urban-intelligence.vercel.app/)
+
 GeoAI is a full-stack geospatial analytics platform for Land Use / Land Cover (LULC) monitoring, change detection, risk alerts, hotspot analysis, and policy-driven simulation.
 
 It uses raster outputs (GeoTIFF) from your Earth Engine + Random Forest pipeline and serves interactive analytics/maps through a FastAPI backend and React + Leaflet frontend.
