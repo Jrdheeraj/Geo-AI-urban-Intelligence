@@ -97,7 +97,7 @@ app.include_router(meta.router, prefix="/meta", tags=["Meta"])
 app.include_router(analytics.router, prefix="/analytics", tags=["Analytics"])
 
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 def health():
     logger.info("Health check served")
     return {"status": "GeoAI backend running"}
