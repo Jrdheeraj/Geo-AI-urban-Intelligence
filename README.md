@@ -102,28 +102,36 @@ This is not just a dashboard. It is a **city intelligence layer** for evidence-b
 <details open>
   <summary><strong>🧭 Map Visualization Demo</strong></summary>
 
-![Map Visualization Demo](https://placehold.co/1400x560/050A18/00E5FF.gif?text=Interactive+Map+Visualization+Demo)
+![Map Visualization Demo](README_assets/map-visualization-tirupati-2025.png)
+
+`Source:` `/map/lulc/tirupati/2025`
 
 </details>
 
 <details>
   <summary><strong>🔁 Change Detection Demo</strong></summary>
 
-![Change Detection Demo](https://placehold.co/1400x560/061022/35F2B5.gif?text=Temporal+Change+Detection+Demo)
+![Change Detection Demo](README_assets/change-detection-tirupati-2018-2025.png)
+
+`Source:` `/map/change/tirupati/2018/2025`
 
 </details>
 
 <details>
   <summary><strong>🚨 Risk Analysis Demo</strong></summary>
 
-![Risk Analysis Demo](https://placehold.co/1400x560/110A20/FE5D9F.gif?text=AI+Risk+Analysis+Demo)
+![Risk Analysis Demo](README_assets/risk-analysis-tirupati-2018-2025.png)
+
+`Source:` `/map/risk/tirupati/2018/2025`
 
 </details>
 
 <details>
   <summary><strong>🧪 Policy Simulation Demo</strong></summary>
 
-![Policy Simulation Demo](https://placehold.co/1400x560/1A1307/FEE440.gif?text=Scenario+Simulation+Demo)
+![Policy Simulation Demo](README_assets/policy-simulation-tirupati-2030-trend.png)
+
+`Source:` `/map/simulation/tirupati/2018/2025/2030?scenario=trend`
 
 </details>
 
